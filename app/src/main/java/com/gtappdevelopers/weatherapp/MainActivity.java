@@ -43,8 +43,7 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
-    FusedLocationProviderClient mFusedLocationClient;
-    int PERMISSION_ID = 44;
+    int PERMISSION_CODE = 1;
     private TextView cityNameTV, cityTemperatureTV, conditionTV;
     private ImageView iconIV;
     private ArrayList<WeatherRVModal> weatherRVModalArrayList;
@@ -82,20 +81,12 @@ public class MainActivity extends AppCompatActivity {
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            // ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, requestCode);
-            requestPermission();
-            return;
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_CODE);
         }
+
         Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
         cityName = getLocationName(location.getLatitude(), location.getLongitude());
-        Log.e("TAG", "CITY NAME IS " + location.getLongitude() + "\n" + location.getLongitude());
+
         searchIV.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -111,28 +102,22 @@ public class MainActivity extends AppCompatActivity {
         getWeatherInfo(getLocationName(location.getLatitude(), location.getLongitude()));
     }
 
-    private void requestPermission() {
-        int PERMISSION_REQUEST_CODE = 200;
-        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_REQUEST_CODE);
-    }
-
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
 
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (grantResults.length > 0) {
-            boolean cameraaccepted = grantResults[0] == PackageManager.PERMISSION_GRANTED;
-            if (cameraaccepted) {
-                Toast.makeText(this, "Permission granted..", Toast.LENGTH_SHORT).show();
-                getWeatherInfo(cityName);
+        if (requestCode == PERMISSION_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Permission GRANTED", Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(this, "Permission Denined \n You cannot use app without providing permission", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Permission DENIED", Toast.LENGTH_SHORT).show();
+                finish();
             }
         }
     }
 
     public void getWeatherInfo(String cityName) {
-        String url = "https://api.weatherapi.com/v1/forecast.json?key=Enteryourkey&q=" + cityName + "&days=1&aqi=yes&alerts=yes";
+        String url = "https://api.weatherapi.com/v1/forecast.json?key=EnteryourAPIKey&q=" + cityName + "&days=1&aqi=yes&alerts=yes";
         RequestQueue queue = Volley.newRequestQueue(MainActivity.this);
         cityNameTV.setText(cityName);
 
@@ -185,7 +170,6 @@ public class MainActivity extends AppCompatActivity {
         });
         queue.add(jsonObjectRequest);
     }
-
 
     public String getLocationName(double lattitude, double longitude) {
         String cityName = "Not Found";
